@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class Minesweeper : MonoBehaviour
@@ -139,6 +140,35 @@ public class Minesweeper : MonoBehaviour
         {
             return false;
         }
+    }
 
+    // 
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        var cell = eventData.pointerCurrentRaycast.gameObject;
+        if (TryGetCellIndex(cell, out var r, out var c))
+        {
+            _cells[r, c].MouseClick();
+        }
+    }
+
+    // ‘I‘ğ‚µ‚½ƒZƒ‹‚Ì”z—ñ”Ô†‚ğ•Ô‚·
+    private bool TryGetCellIndex(GameObject cell, out int row, out int column)
+    {
+        for (var r = 0; r < _cells.GetLength(0); r++)
+        {
+            for (var c = 0; c < _cells.GetLength(1); c++)
+            {
+                if (_cells[r, c] == cell)
+                {
+                    row = r;
+                    column = c;
+                    return true;
+                }
+            }
+        }
+
+        row = column = -1;
+        return false;
     }
 }

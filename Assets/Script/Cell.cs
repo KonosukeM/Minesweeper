@@ -24,6 +24,13 @@ public class Cell : MonoBehaviour
 
     [SerializeField]
     private CellState _cellState = CellState.None;
+
+    [SerializeField]
+    public GameObject _cellcover = null;
+
+    [SerializeField]
+    public GameObject _mine = null;
+
     public CellState CellState
     {
         get => _cellState;
@@ -37,6 +44,11 @@ public class Cell : MonoBehaviour
     private void OnValidate()
     {
         OnCellStateChanged();
+    }
+
+    private void Update()
+    {
+        MouseClick();
     }
 
     private void OnCellStateChanged()
@@ -56,6 +68,21 @@ public class Cell : MonoBehaviour
         {
             _view.text = ((int)_cellState).ToString();
             _view.color = Color.blue;
+        }
+    }
+
+    public void MouseClick()
+    {
+        // 左クリックを押したとき
+        if(Input.GetMouseButtonDown(0)) 
+        {
+            _cellcover.SetActive(false);
+        }
+
+        // 右クリックを押したとき
+        if(Input.GetMouseButtonDown(1)) 
+        {
+            _mine.SetActive(true);
         }
     }
 }
