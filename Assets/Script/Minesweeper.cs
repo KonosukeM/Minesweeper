@@ -1,44 +1,94 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using TMPro;
 
-public class Minesweeper : MonoBehaviour
+public class Minesweeper : MonoBehaviour, IPointerClickHandler
 {
+    // 行
     [SerializeField]
     private int _rows = 1;
 
+    // 列
     [SerializeField]
     private int _columns = 1;
 
+    // 地雷の数
     [SerializeField]
     private int _mineCount = 1;
 
+    // 行列展開数
     [SerializeField]
     private GridLayoutGroup _gridLayoutGroup = null;
 
+    // セルプレハブ
     [SerializeField]
     private Cell _cellPrefab = null;
+
+    // 経過時間テキスト
+    [SerializeField]
+    private TextMeshProUGUI _timeText = null;
+
+    // ゲームクリアテキスト
+    [SerializeField]
+    private TextMeshProUGUI _clearText = null;
+
+    // ゲームオーバーテキスト
+    [SerializeField]
+    private TextMeshProUGUI _overText = null;
 
     // 2次元配列用のセル
     private Cell[,] _cells;
 
+    // 初手地雷防止用
+    private bool _firstClick = false;
+
+    // ゲームクリアフラグ
+    private bool _gameClear = false;
+
+    // ゲームオーバーフラグ
+    private bool _gameOver = false;
+
     void Start()
     {
+        // 展開機能
         _gridLayoutGroup.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         _gridLayoutGroup.constraintCount = _columns;
 
-        // プレハブからセルを生成する
+        // parentにプレハブセルの動きを持たせる/プレハブからセルを生成する
         var parent = _gridLayoutGroup.gameObject.transform;
         _cells = CreateCells(_rows, _columns, parent);
 
         // 地雷を設置する
         InitializeCells(_mineCount);
+
+        // テキストの非表示
+        _clearText.gameObject.SetActive(false);
+        _overText.gameObject.SetActive(false);
+    }
+
+    private void Update()
+    {
+        // ゲームクリアの処理
+        if(_gameClear) 
+        { 
+            _clearText.gameObject.SetActive(true);
+            return;
+        }
+
+        // ゲームオーバーの処理
+        if(_gameOver) 
+        { 
+            _overText.gameObject.SetActive(true);
+            return;
+        }
+
     }
 
     // セルを初期化
     private void InitializeCells(int mineCount)
     {
-        // 地雷が配列の長さを超えていた時の処理
+        // 設置する地雷が配列の長さを超えていた時の処理
         if (mineCount >= _cells.Length)
         {
             // 地雷数が間違っていた時のデバックログ
@@ -86,7 +136,7 @@ public class Minesweeper : MonoBehaviour
         }
     }
 
-    // セルを親オブジェクトに依存
+    // プレハブセルを親オブジェクトに依存
     private Cell[,] CreateCells(int rows, int columns, Transform parent)
     {
         var cells = new Cell[_rows, _columns];
@@ -142,18 +192,33 @@ public class Minesweeper : MonoBehaviour
         }
     }
 
-    // 
+    // クリック検知
     public void OnPointerClick(PointerEventData eventData)
     {
-        var cell = eventData.pointerCurrentRaycast.gameObject;
-        if (TryGetCellIndex(cell, out var r, out var c))
-        {
-            _cells[r, c].MouseClick();
+        // 選択したセル
+        var cell = eventData.pointerCurrentRaycast.gameObject.GetComponent<Cell>();
+
+        if (!cell) { return; } // セルのみにしか反応しない
+
+        if (TryGetCellIndex(cell, out int row, out int column)) {
+            // 左クリックを押したとき
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                _cells[row, column].Cellopenjudg();
+                // ゲームオーバー判定
+                if (cell.CellState == CellState.Mine) { _gameOver = true; }
+            }
+
+            // 右クリックを押したとき
+            else if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                _cells[row, column].Cellclosejudg();
+            } 
         }
     }
 
     // 選択したセルの配列番号を返す
-    private bool TryGetCellIndex(GameObject cell, out int row, out int column)
+    private bool TryGetCellIndex(Cell cell, out int row, out int column)
     {
         for (var r = 0; r < _cells.GetLength(0); r++)
         {

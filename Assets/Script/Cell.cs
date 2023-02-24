@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,10 +32,12 @@ public class Cell : MonoBehaviour
     [SerializeField]
     public GameObject _mine = null;
 
+    Boolean change = false;
+
     public CellState CellState
     {
-        get => _cellState;
-        set
+        get => _cellState; // 値を取得する
+        set // 値を設定する set value はセット
         {
             _cellState = value;
             OnCellStateChanged();
@@ -46,11 +49,7 @@ public class Cell : MonoBehaviour
         OnCellStateChanged();
     }
 
-    private void Update()
-    {
-        MouseClick();
-    }
-
+    // 開いたセルの種類が何かを返す関数
     private void OnCellStateChanged()
     {
         if (_view == null) { return; }
@@ -71,18 +70,24 @@ public class Cell : MonoBehaviour
         }
     }
 
-    public void MouseClick()
+    // 左クリックで呼ばれる関数
+    public void Cellopenjudg() 
     {
-        // 左クリックを押したとき
-        if(Input.GetMouseButtonDown(0)) 
-        {
-            _cellcover.SetActive(false);
-        }
+        _cellcover.SetActive(false);
+    }
 
-        // 右クリックを押したとき
-        if(Input.GetMouseButtonDown(1)) 
+    // 右クリックで呼ばれる関数（旗）
+    public void Cellclosejudg() 
+    {
+        if (!change)
         {
             _mine.SetActive(true);
+            change = true;
+        } 
+        else if (change)
+        { 
+            _mine.SetActive(false);
+            change = false;
         }
     }
 }
